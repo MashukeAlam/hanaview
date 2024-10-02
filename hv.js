@@ -43,10 +43,76 @@ function createElement(vNode) {
   return element;
 }
 
+// amount of my credit in writing this is same as the number of moons venus has
+function updateElement(parentElement, oldVNode, newVNode, index = 0) {
+  const oldElement = parentElement.childNodes[index];
+
+  if (!newVNode && oldElement) {
+    oldElement.remove();
+    return;
+  }
+
+  if (!oldVNode) {
+    parentElement.appendChild(createElement(newVNode));
+    return;
+  }
+
+  if (typeof newVNode === 'string' || typeof oldVNode === 'string') {
+    if (newVNode !== oldVNode) {
+      const newElement = createElement(newVNode);
+      oldElement.replaceWith(newElement);
+    }
+    return;
+  }
+
+  if (newVNode.tag !== oldVNode.tag) {
+    const newElement = createElement(newVNode);
+    oldElement.replaceWith(newElement);
+    return;
+  }
+
+  if (newVNode.text && newVNode.text !== oldVNode.text) {
+    oldElement.textContent = newVNode.text;
+  }
+
+  if (newVNode.attributes) {
+    Object.keys(newVNode.attributes).forEach(attr => {
+      if (oldElement.getAttribute(attr) !== newVNode.attributes[attr]) {
+        oldElement.setAttribute(attr, newVNode.attributes[attr]);
+      }
+    });
+  }
+
+  if (newVNode.events) {
+    Object.keys(newVNode.events).forEach(event => {
+      const oldListener = oldElement[`on${event}`];
+      if (oldListener !== newVNode.events[event]) {
+        if (oldListener) {
+          oldElement.removeEventListener(event, oldListener);
+        }
+        oldElement.addEventListener(event, newVNode.events[event]);
+        oldElement[`on${event}`] = newVNode.events[event]; 
+      }
+    });
+  }
+
+  const oldChildren = oldVNode.children || [];
+  const newChildren = newVNode.children || [];
+  const length = Math.max(oldChildren.length, newChildren.length);
+
+  for (let i = 0; i < length; i++) {
+    updateElement(oldElement, oldChildren[i], newChildren[i], i);
+  }
+}
+
 // shove the generated html into real dom
 function render(vNode, container) {
-  container.innerHTML = ''; // reset container. why not use replace?
-  container.appendChild(createElement(vNode));
+  if (!currentVDOM) {
+    container.innerHTML = ''; // reset container
+    container.appendChild(createElement(vNode));
+  } else {
+    updateElement(container, currentComponent, vNode); // update the root element only
+  }
 }
 
 // rerender when the state changes
