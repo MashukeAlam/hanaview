@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>HanaView To-Do List</title>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="module">
+      import { mount, val, ref } from "./hv.js";
+
+      function TodoList() {
+        const sample = [
+          { text: "Buy groceries", completed: false },
+          { text: "Read 'The Alchemist'", completed: false },
+          { text: "Complete workout session", completed: false },
+          { text: "Finish the web development project", completed: false },
+          { text: "Plan the weekend trip itinerary", completed: true },
+          { text: "Send emails to the team", completed: false },
+          { text: "Schedule a meeting with the client", completed: false },
+          { text: "Practice guitar for 30 minutes", completed: false },
+          { text: "Clean the house before guests arrive", completed: false },
+          { text: "Watch 'Inception'", completed: true },
+        ];
+
+        const [todos, setTodos] = val(sample);
+        const inputRef = ref(null); // Create a ref for the input
+
+        const addTodo = () => {
+          const inputValue = inputRef.current.value;
+
+          if (inputValue.trim() === "") return; // Prevent empty tasks
+          setTodos([...todos, { text: inputValue, completed: false }]);
+        };
+
+        const toggleTodo = (index) => {
+          const newTodos = todos.map((todo, i) =>
+            i === index ? { ...todo, completed: !todo.completed } : todo
+          );
+          setTodos(newTodos);
+        };
+
+        const deleteTodo = (index) => {
+          const newTodos = todos.filter((_, i) => i !== index);
+          setTodos(newTodos);
+        };
+
+        return {
+          tag: "div",
+          attributes: { class: "flex flex-col items-center" },
+          children: [
+            {
+              tag: "h1",
+              attributes: { class: "text-2xl font-bold text-gray-600 italic" },
+              text: "todo",
+            },
+            {
+              tag: "input",
+              attributes: {
+                class: "border border-gray-200 focus:ring ps-2",
+                type: "text",
+                placeholder: "your next task...",
+              },
+              events: {},
+              ref: inputRef,
+            },
+            {
+              tag: "button",
+              text: "Add",
+              attributes: {
+                class:
+                  "bg-gray-700 text-white font-semibold px-4 py-1 rounded my-2",
+              },
+              events: {
+                click: addTodo,
+              },
+            },
+            {
+              tag: "ul",
+              children: todos.map((todo, index) => ({
+                tag: "li",
+                attributes: { class: "flex gap-10 my-1" },
+                children: [
+                  {
+                    tag: "button",
+                    text: "Delete",
+                    attributes: {
+                      class:
+                        "border border-red-400 text-gray-700 hover:bg-red-400 hover:text-white font-light px-4 rounded",
+                    },
+                    events: {
+                      click: () => deleteTodo(index),
+                    },
+                  },
+                  {
+                    tag: "span",
+                    text: todo.completed ? `✅ ${todo.text}` : todo.text,
+                    attributes: { class: "cursor-pointer" },
+                    events: {
+                      click: () => toggleTodo(index),
+                    },
+                  },
+                ],
+              })),
+            },
+          ],
+        };
+      }
+
+      // Mount the TodoList component to the DOM
+      const root = document.getElementById("root");
+      mount(TodoList, root);
+    </script>
+  </body>
+</html>
